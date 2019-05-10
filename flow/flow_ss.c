@@ -1,18 +1,15 @@
 #include <execinfo.h>
 
+#include <inttypes.h>
+
 #include <stdbool.h>
 
 #include <stdio.h>
 
 #include <stdlib.h>
 
-#include <inttypes.h>
-
-#ifndef FLOW
-#define FLOW
 
 
-#define long long long
 
 #ifndef FAIL_H
 #define FAIL_H
@@ -703,6 +700,35 @@ void iterator_destroy(Iterator* iterator)
     free(iterator);
 }
 
+#ifndef FOREACH_H
+#define FOREACH_H
+
+/**
+ * @brief The foreach function.
+ * 
+ * @file foreach.h
+ * @author WingCorp
+ * @date 2018-06-16
+ */
+
+
+/**
+ * @brief Performs an action on every value from an iterator using an action function.
+ *  
+ * @param iterator the iterator to loop through.
+ * @param action the action function, must have signature: void <name>(Dynamic <arg>)
+ */
+void foreach(Iterator* iterator, void (*action) (Dynamic));
+
+#endif
+void foreach(Iterator* iterator, void (*action) (Dynamic))
+{
+    while (iterator_hasNext(iterator))
+    {
+        (*action)(iterator_next(iterator).value);
+    }
+    iterator_reset(iterator);
+}
 #ifndef STACK_H
 #define STACK_H
 
@@ -918,9 +944,7 @@ Dynamic stack_fold(Stack* stack, Dynamic state, Dynamic (*folder) (Dynamic, Dyna
     return currentState;
 }
 
-#endif
 
-#include "./hdc/hdc.h"
 
 typedef struct _Edge
 {
@@ -1018,12 +1042,29 @@ int bottleneck(Edge* edgeTo)
     return bottle;
 }
 
+void printEdge(Dynamic edgeRef)
+{
+    Edge* e = ref(edgeRef);
+    printf("u: %d, v: %d, cap: %d, flow: %d, residual: %d\n", e->u, e->v, e->cap, e->flow, e->residual);
+}
+
+void printAdj(Stack** adj)
+{
+    int i;
+    for (i = 0; i < n; i++)
+    {
+        printf("adj[%d]\n", i);
+        Stack* stack = adj[i];
+        foreach(stack_iterator(stack), &printEdge);
+    }
+}
+
 int main()
 {
     printf("Ready!\n");
     //Parse:
     scanf("%d %d %d %d", &n, &m, &s, &t);
-    printf("Parsed first line:\n %d %d %d %d\n", n, m, s, t);
+    printf("Parsed first line:\n%d %d %d %d\n", n, m, s, t);
     Edge edges[n];
     bool adjInitialized[n];
     Stack** adj = malloc(sizeof(Stack*) * n);
@@ -1081,11 +1122,15 @@ int main()
         Edge e = edges[i];
         if (e.flow < 1)
         {
+            printf("edge %d <-> %d not used\n", e.u, e.v);
             continue;
         }
+        printf("edge %d <-> %d used!\n", e.u, e.v);
         stack_push(toPrint, di32(i));
         edgesUsed++;
     }
+    printAdj(adj);
+    printf("edgesUsed: %d\n", edgesUsed);
     printf("%d %d %d\n", n, value, edgesUsed);
     Iterator* iterator = stack_iterator(toPrint);
     while(iterator_hasNext(iterator)){
