@@ -11,6 +11,7 @@
 #include "../hdc/src/option/option.h"
 #include "../hdc/src/iterator/iterator.h"
 #include "../hdc/src/foreach/foreach.h"
+#include "../hdc/src/list/list.h"
 #include "../hdc/src/stack/stack.h"
 
 #endif

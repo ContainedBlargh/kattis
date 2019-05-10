@@ -29,37 +29,37 @@ Dynamic findPath(Dynamic acc, int currentNode)
     int bottleneck = i32(snd(acc));
     if (currentNode == t)
     {
-        return pair((dref(list_cons(nodes, currentNode)), di32(bottleneck)));
+        return pair(dref(list_cons(nodes, di32(currentNode))), di32(bottleneck));
     }
     Stack* adj = stack_init(1 + ilog10(n));
     int i;
     
-    Iterator* nodes = list_iterator(nodes);
+    Iterator* nodeIte = list_iterator(nodes);
     for (i = 0; i < n; i++)
     {
-        if (i != currentNode && res_network[currentNode][i] > 0 && nodesContains(nodes, i))
+        if (i != currentNode && res_network[currentNode][i] > 0 && nodesContains(nodeIte, i))
         {
             stack_push(adj, di32(i));
         }
     }
-    iterator_destroy(nodes);
+    iterator_destroy(nodeIte);
     Iterator* adjacent = stack_iterator(adj);
     Option opt;
     for (opt = iterator_next(adjacent); opt.type == SOME; opt = iterator_next(adjacent))
     {
         int nextNode = i32(coerce(opt));
         int cap = res_network[currentNode][nextNode];
-        int currentMin = (cap < bottleneck) cap : bottleneck;
-        int next = pair(dref(list_cons(nodes, currentNode)), di32(currentMin));
+        int currentMin = (cap < bottleneck) ? cap : bottleneck;
+        Dynamic next = pair(dref(list_cons(nodes, di32(currentNode))), di32(currentMin));
         Dynamic path = findPath(next, nextNode);
-        nodes = list_iterator(ref(fst(path)));
-        if (!nodesContains(nodes, t)) {
+        nodeIte = list_iterator(ref(fst(path)));
+        if (!nodesContains(nodeIte, t)) {
             continue;
         }
-        iterator_destroy(nodes);
+        iterator_destroy(nodeIte);
         return path;
     }
-    iterator_destroy(nodes);
+    iterator_destroy(nodeIte);
     return acc;
 }
 
@@ -71,11 +71,18 @@ int main()
     printf("Parsed first line:\n%d %d %d %d\n", n, m, s, t);
     int i;
 
-    int n_network[n][n];
-    network = n_network;
-    int n_res_network[n][n];
-    res_network = n_res_network;
+    network = malloc(sizeof(int*)*n);
+    for (i = 0; i < n; i++)
+    {
+        network[i] = malloc(sizeof(int) * n);
+    }
     
+    res_network = malloc(sizeof(int*)*n);
+    for (i = 0; i < n; i++)
+    {
+        network[i] = malloc(sizeof(int) * n);
+    }
+
     List* path;
     int bottleneck;
 
